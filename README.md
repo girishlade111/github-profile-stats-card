@@ -2,12 +2,35 @@
 
 A customizable **GitHub profile stats card generator** for GitHub Profile READMEs.
 
-Generate dynamic SVG stats cards for your GitHub profile, choose from multiple themes, and embed the result directly into your README with a single line of Markdown.
+Generate dynamic SVG stats cards for any GitHub profile, choose from multiple themes, and embed the result directly into your README with a single line of Markdown.
 
 No installation, image uploads, or manual updates required.
 
-**Live Generator & Theme Gallery:**  
+**Live Generator & Theme Gallery:**
 https://kgnio-profile-card.vercel.app/
+
+---
+
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [What Is GitHub Profile Stats Card?](#what-is-github-profile-stats-card)
+- [Generate a Card](#generate-a-card)
+- [Available Themes](#available-themes)
+- [GitHub Profile README Example](#github-profile-readme-example)
+- [Using the Card With AI Assistants and README Generators](#using-the-card-with-ai-assistants-and-readme-generators)
+- [How Often Does It Update?](#how-often-does-it-update)
+- [Option A — Use the Hosted Version](#option-a--use-the-hosted-version)
+- [Option B — Run It in Your Own Repository With GitHub Actions](#option-b--run-it-in-your-own-repository-with-github-actions)
+- [Local Development](#local-development)
+- [Project Structure](#project-structure)
+- [API Reference](#api-reference)
+- [Scripts](#scripts)
+- [Tech Stack](#tech-stack)
+- [Common Problems](#common-problems)
+- [Who Is This For?](#who-is-this-for)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
@@ -287,7 +310,7 @@ You can then display it with:
 Fork:
 
 ```text
-kgnio/github-profile-stats-card
+girishlade111/github-profile-stats-card
 ```
 
 After forking, you should have:
@@ -461,6 +484,14 @@ Actions
 
 Wait for the workflow to complete successfully.
 
+The workflow:
+
+1. Installs dependencies with `npm ci`
+2. Fetches your latest GitHub statistics
+3. Generates `public/card.svg`
+4. Commits the updated SVG back to this repository
+5. Optionally updates the card URL cache-buster in your profile README
+
 ---
 
 ## Step 8 — Verify the Generated SVG
@@ -493,6 +524,139 @@ Commit the README.
 
 ---
 
+## Local Development
+
+### Prerequisites
+
+- Node.js 20+
+- npm
+
+### Install
+
+```bash
+npm install
+```
+
+### Run the development server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Build for production
+
+```bash
+npm run build
+npm run start
+```
+
+### Lint
+
+```bash
+npm run lint
+```
+
+### Generate a card locally
+
+```bash
+npm run generate:card
+```
+
+You can optionally set these environment variables:
+
+| Variable | Description | Example |
+| --- | --- | --- |
+| `PROFILE_REPO_TOKEN` | GitHub token used for API requests | `ghp_...` |
+| `CARD_USERNAME` | GitHub username to generate for | `kgnio` |
+| `CARD_THEME` | Theme name | `midnight` |
+| `CARD_OUTPUT` | Output file path | `public/card.svg` |
+
+---
+
+## Project Structure
+
+```text
+.
+├── .github/
+│   └── workflows/
+│       └── generate-card.yml   # Scheduled/manual SVG card generation workflow
+├── app/
+│   ├── api/
+│   │   └── card/
+│   │       └── route.ts        # GET /api/card — dynamic SVG endpoint
+│   ├── globals.css
+│   ├── icon.tsx
+│   ├── layout.tsx
+│   ├── opengraph-image.tsx
+│   ├── page.tsx                # Landing page / theme gallery
+│   ├── robots.ts
+│   └── sitemap.ts
+├── components/                 # UI components
+├── lib/                        # Shared utilities and card logic
+├── public/                     # Static assets (incl. generated card.svg)
+├── scripts/
+│   └── generate-card.ts        # CLI script used by GitHub Actions
+├── types/                      # TypeScript type definitions
+├── next.config.ts
+├── package.json
+├── postcss.config.mjs
+├── tsconfig.json
+└── README.md
+```
+
+---
+
+## API Reference
+
+### `GET /api/card`
+
+Generates and returns an SVG stats card.
+
+| Query parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `user` | string | Yes | GitHub username |
+| `theme` | string | No | Theme name (defaults to a default theme) |
+
+**Example**
+
+```text
+/api/card?user=octocat&theme=midnight
+```
+
+**Response**
+
+- `Content-Type: image/svg+xml`
+- SVG body rendered with the selected theme
+
+---
+
+## Scripts
+
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the Next.js development server |
+| `npm run build` | Create a production build |
+| `npm run start` | Serve the production build |
+| `npm run lint` | Run ESLint |
+| `npm run generate:card` | Generate `public/card.svg` via `scripts/generate-card.ts` |
+
+---
+
+## Tech Stack
+
+- [Next.js](https://nextjs.org/) — App Router, API routes, React Server Components
+- [React 19](https://react.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS 4](https://tailwindcss.com/)
+- [Radix UI](https://www.radix-ui.com/) — accessible UI primitives
+- [Lucide React](https://lucide.dev/) — icons
+- [GitHub GraphQL API](https://docs.github.com/en/graphql) — profile statistics
+- [GitHub Actions](https://docs.github.com/en/actions) — automated card generation
+
+---
+
 ## How Self-Hosted Updates Work
 
 The GitHub Actions workflow:
@@ -501,6 +665,7 @@ The GitHub Actions workflow:
 2. Generates `public/card.svg`
 3. Commits the updated SVG
 4. Keeps the card available through your repository
+5. Optionally rewrites the `?v=` cache-buster on the card URL in your profile README
 
 GitHub may still cache the image for a short period.
 
@@ -551,6 +716,15 @@ git push
 
 Then run the workflow again.
 
+### Card Not Updating on My Profile
+
+GitHub caches externally hosted images. Either:
+
+- Wait a few minutes for the CDN cache to expire
+- Append a cache-busting query parameter, e.g. `?v=2`
+
+The bundled workflow does this automatically for the raw GitHub URL form.
+
 ---
 
 ## Who Is This For?
@@ -570,6 +744,12 @@ GitHub Profile Stats Card is useful for developers who want to:
 ## Contributing
 
 Contributions, feature requests, new themes, and bug reports are welcome.
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/my-feature`
+3. Commit your changes: `git commit -m "feat: add my feature"`
+4. Push the branch: `git push origin feature/my-feature`
+5. Open a Pull Request
 
 If you find the project useful, consider giving the repository a star.
 
